@@ -1,6 +1,6 @@
 import { PageSection } from "../../components/PageSection";
 import { SeedMap } from "../../components/SeedMap";
-
+import "./map.css";
 
 export const metadata = {
   title: "Карта сидов — RuCraft",

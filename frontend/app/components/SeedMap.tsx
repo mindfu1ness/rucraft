@@ -181,8 +181,8 @@ export function SeedMap() {
   
   const [seedInput, setSeedInput] = useState<string>("1058938605076983349");
   const [seed, setSeed] = useState<number>(1058938605);
-  const [platform, setPlatform] = useState<Platform>("bedrock");
-  const [versionId, setVersionId] = useState<string>("bedrock_1_21_120");
+  const [platform, setPlatform] = useState<Platform>("java");
+  const [versionId, setVersionId] = useState<string>("java_1_21");
   const [centerX, setCenterX] = useState<number>(411);
   const [centerZ, setCenterZ] = useState<number>(769);
   const [zoom, setZoom] = useState<number>(1);
@@ -739,73 +739,79 @@ export function SeedMap() {
         </div>
       </div>
 
-      <div className="mt-3 flex flex-wrap items-start justify-between gap-4 text-sm text-gray-200">
-        <div>
-          {hover ? (
-            <>
-              <div className="mb-1">
-                Биом: <strong>{BIOME_LABELS[hover.biome]}</strong>
-              </div>
-              <div className="mb-1">
-                Координаты: X = {hover.worldX}, Z = {hover.worldZ}
-              </div>
-              <div>
-                Чанк: ({hover.chunkX}, {hover.chunkZ})
-              </div>
-            </>
-          ) : (
-            <span>Наведите курсор на карту, чтобы увидеть биом и координаты.</span>
-          )}
-
-          {selectedStructure && (
-            <div className="mt-3 rounded border border-gray-600 bg-black/40 p-2 text-xs">
-              <div className="font-semibold">
-                {STRUCTURE_LABELS[selectedStructure.type]} (X: {selectedStructure.worldX}, Z:{" "}
-                {selectedStructure.worldZ})
-              </div>
-              <div className="text-gray-400">
-                Чанк: ({Math.floor(selectedStructure.worldX / 16)},{" "}
-                {Math.floor(selectedStructure.worldZ / 16)})
-              </div>
-            </div>
-          )}
+      {/* Информация под картой - новая структура */}
+<div className="seedmap-info">
+  {/* Левая колонка - информация с курсора */}
+  <div className="seedmap-cursor-info">
+    <h3>Позиция курсора</h3>
+    {hover ? (
+      <>
+        <div className="biom-name">{BIOME_LABELS[hover.biome]}</div>
+        <div className="coordinates">
+          <span>X: {hover.worldX}</span>
+          <span>Z: {hover.worldZ}</span>
         </div>
+        <div className="chunk">Чанк: ({hover.chunkX}, {hover.chunkZ})</div>
+      </>
+    ) : (
+      <div className="empty-state">Наведите на карту</div>
+    )}
+  </div>
 
-        <div className="flex flex-col gap-3 text-xs text-gray-400">
-          <div>
-            <div className="mb-1 font-semibold text-gray-200">Биомы</div>
-            <div className="flex flex-wrap gap-2">
-              {(Object.keys(BIOME_COLORS) as Array<BiomeId>).map((id) => (
-                <div key={id} className="flex items-center gap-1">
-                  <span
-                    className="inline-block h-3 w-3 rounded"
-                    style={{ backgroundColor: BIOME_COLORS[id] }}
-                  />
-                  <span>{BIOME_LABELS[id]}</span>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          <div>
-            <div className="mb-1 font-semibold text-gray-200">Структуры</div>
-            <div className="flex flex-wrap gap-2">
-              {(Object.keys(STRUCTURE_LABELS) as Array<StructureType>).map((id) => (
-                <div key={id} className="flex items-center gap-1">
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img
-                    src={STRUCTURE_ICONS[id]}
-                    alt={STRUCTURE_LABELS[id]}
-                    className="h-3 w-3"
-                    draggable={false}
-                  />
-                  <span>{STRUCTURE_LABELS[id]}</span>
-                </div>
-              ))}
-            </div>
-          </div>
+  {/* Правая колонка - информация о выбранной метке */}
+  <div className="seedmap-structure-info">
+    <h3>Выбранная структура</h3>
+    {selectedStructure ? (
+      <>
+        <div className="structure-name">{STRUCTURE_LABELS[selectedStructure.type]}</div>
+        <div className="structure-coordinates">
+          <span>X: {selectedStructure.worldX}</span>
+          <span>Z: {selectedStructure.worldZ}</span>
         </div>
+        <div className="structure-chunk">
+          Чанк: ({Math.floor(selectedStructure.worldX / 16)}, {Math.floor(selectedStructure.worldZ / 16)})
+        </div>
+      </>
+    ) : (
+      <div className="no-selection">Кликните на иконку структуры</div>
+    )}
+  </div>
+
+  {/* Нижний блок - легенда биомов и структур */}
+  <div className="seedmap-legend">
+    <div className="seedmap-biomes-block">
+      <h4>Биомы</h4>
+      <div className="seedmap-biome-list">
+        {(Object.keys(BIOME_COLORS) as Array<BiomeId>).map((id) => (
+          <div key={id} className="seedmap-biome-item">
+            <span
+              className="seedmap-biome-color"
+              style={{ backgroundColor: BIOME_COLORS[id] }}
+            />
+            <span>{BIOME_LABELS[id]}</span>
+          </div>
+        ))}
       </div>
+    </div>
+
+    <div className="seedmap-structures-block">
+      <h4>Структуры</h4>
+      <div className="seedmap-structure-list">
+        {(Object.keys(STRUCTURE_LABELS) as Array<StructureType>).map((id) => (
+          <div key={id} className="seedmap-structure-item">
+            <img
+              src={STRUCTURE_ICONS[id]}
+              alt={STRUCTURE_LABELS[id]}
+              className="seedmap-structure-icon"
+              draggable={false}
+            />
+            <span>{STRUCTURE_LABELS[id]}</span>
+          </div>
+        ))}
+      </div>
+    </div>
+  </div>
+</div>
     </div>
   );
 }

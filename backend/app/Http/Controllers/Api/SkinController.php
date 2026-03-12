@@ -4,14 +4,112 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\Skin;
-use Illuminate\Http\Request;
+use App\Models\SkinModerationRequest;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 
 class SkinController extends Controller
 {
+    /**
+     * Создать новую заявку на скин (для авторизованных пользователей)
+     */
+    public function store(Request $request): JsonResponse
+    {
+        Log::info('SkinController@store - начало', [
+            'user_id' => $request->user()?->id,
+            'has_file' => $request->hasFile('skin_file'),
+            'all_input' => $request->all(),
+            'files' => $request->files->all(),
+            'content_type' => $request->header('Content-Type'),
+            'method' => $request->method(),
+        ]);
+
+        try {
+            $validated = $request->validate([
+                'title' => 'required|string|max:255',
+                'category' => 'required|in:Смешные,Для девочек,Для мальчиков,Аниме,Мобы,Милые,Ютуберы',
+                'model' => 'required|in:Steve,Alex',
+                'description' => 'nullable|string|max:1000',
+                'skin_file' => 'required|file|mimes:png|max:20480', // 20MB
+            ], [
+                'title.required' => 'Название скина обязательно',
+                'category.required' => 'Категория обязательна',
+                'category.in' => 'Неверная категория',
+                'model.required' => 'Модель обязательна',
+                'model.in' => 'Неверная модель',
+                'skin_file.required' => 'Файл скина обязателен',
+                'skin_file.file' => 'Должен быть файл',
+                'skin_file.mimes' => 'Файл должен быть в формате PNG',
+                'skin_file.max' => 'Размер файла не должен превышать 20 МБ',
+            ]);
+
+            $user = $request->user();
+
+            // Сохранение файла
+            $file = $request->file('skin_file');
+            $filename = uniqid() . '_' . $file->getClientOriginalName();
+            $path = $file->storeAs('skins', $filename, 'public');
+
+            if (!$path) {
+                return response()->json([
+                    'error' => 'Не удалось сохранить файл',
+                ], 500);
+            }
+
+            // Создание заявки на модерацию
+            $moderationRequest = SkinModerationRequest::create([
+                'user_id' => $user->id,
+                'title' => $validated['title'],
+                'skin_texture_file' => $path,
+                'model' => $validated['model'],
+                'category' => $validated['category'],
+                'description' => $validated['description'] ?? null,
+                'status' => 'pending',
+            ]);
+
+            return response()->json([
+                'message' => 'Скин отправлен на модерацию',
+                'data' => [
+                    'id' => $moderationRequest->id,
+                    'title' => $moderationRequest->title,
+                    'category' => $moderationRequest->category,
+                    'status' => $moderationRequest->status,
+                ],
+            ], 201);
+
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            // Удаляем файл если валидация не прошла
+            if (isset($path)) {
+                Storage::disk('public')->delete($path);
+            }
+
+            return response()->json([
+                'error' => 'Ошибка валидации',
+                'message' => $e->getMessage(),
+                'errors' => $e->errors(),
+            ], 422);
+
+        } catch (\Exception $e) {
+            // Удаляем файл если произошла ошибка
+            if (isset($path)) {
+                Storage::disk('public')->delete($path);
+            }
+
+            Log::error('Error in SkinController@store', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+
+            return response()->json([
+                'error' => 'Не удалось создать заявку',
+                'message' => $e->getMessage()
+            ], 500);
+        }
+    }
+
     public function index(): JsonResponse
     {
         try {
@@ -32,24 +130,9 @@ class SkinController extends Controller
                 ->paginate($perPage)
                 ->through(function (Skin $skin) {
                     $filePath = $skin->skin_texture_file;
-                    
-                    // Формируем URL
-                    $fileUrl = null;
-                    
-                    if ($filePath) {
-                        // Проверяем существование файла
-                        if (Storage::disk('public')->exists($filePath)) {
-                            $fileUrl = url('storage/' . $filePath);
-                        } else {
-                            // Если файл не найден, используем заглушку
-                            $fileUrl = 'https://via.placeholder.com/64x64/1e3c72/ffffff?text=' . urlencode($skin->title);
-                            
-                            Log::warning('Skin file not found', [
-                                'skin_id' => $skin->id,
-                                'path' => $filePath
-                            ]);
-                        }
-                    }
+
+                    // Возвращаем относительный путь вместо полного URL
+                    $fileUrl = $filePath;
 
                     return [
                         'id' => $skin->id,
@@ -141,15 +224,10 @@ class SkinController extends Controller
     {
         try {
             $skin->load('user');
-            
+
             $filePath = $skin->skin_texture_file;
-            $fileUrl = null;
-            
-            if ($filePath) {
-                if (Storage::disk('public')->exists($filePath)) {
-                    $fileUrl = url('storage/' . $filePath);
-                }
-            }
+            // Возвращаем относительный путь вместо полного URL
+            $fileUrl = $filePath;
 
             return response()->json([
                 'data' => [
@@ -175,75 +253,6 @@ class SkinController extends Controller
             
             return response()->json([
                 'error' => 'Failed to load skin'
-            ], 500);
-        }
-    }
-
-    public function submit(Request $request): JsonResponse
-    {
-        try {
-            $request->validate([
-                'title' => 'required|string|max:255',
-                'category' => 'required|in:Смешные,Для девочек,Для мальчиков,Аниме,Мобы,Милые,Ютуберы',
-                'model' => 'required|in:Steve,Alex',
-                'skin_file' => 'required|file|image|mimes:png|max:2048',
-            ]);
-
-            $user = $request->user();
-            
-            if (!$user) {
-                return response()->json(['error' => 'Unauthorized'], 401);
-            }
-
-            // Сохраняем файл
-            $file = $request->file('skin_file');
-            $filename = time() . '_' . Str::random(10) . '.png';
-            $path = $file->storeAs('skins', $filename, 'public');
-
-            if (!$path) {
-                throw new \Exception('Failed to upload file');
-            }
-
-            // Создаем запись в БД со статусом 'process'
-            $skin = Skin::create([
-                'user_id' => $user->id,
-                'title' => $request->title,
-                'category' => $request->category,
-                'model' => $request->model,
-                'skin_texture_file' => $path,
-                'status' => 'process', // Статус "на рассмотрении"
-            ]);
-
-            Log::info('Skin submitted for review', [
-                'skin_id' => $skin->id,
-                'user_id' => $user->id,
-                'title' => $skin->title,
-            ]);
-
-            return response()->json([
-                'success' => true,
-                'message' => 'Skin submitted for review successfully',
-                'data' => [
-                    'id' => $skin->id,
-                    'title' => $skin->title,
-                    'status' => $skin->status,
-                ]
-            ], 201);
-
-        } catch (\Illuminate\Validation\ValidationException $e) {
-            return response()->json([
-                'error' => 'Validation failed',
-                'errors' => $e->errors()
-            ], 422);
-        } catch (\Exception $e) {
-            Log::error('Error submitting skin', [
-                'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString()
-            ]);
-
-            return response()->json([
-                'error' => 'Failed to submit skin',
-                'message' => $e->getMessage()
             ], 500);
         }
     }

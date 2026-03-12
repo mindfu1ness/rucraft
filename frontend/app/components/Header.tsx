@@ -20,7 +20,7 @@ export function Header() {
     <header className="site-header">
       <div className="site-header-inner">
         <Link href="/" className="site-logo" aria-label="RuCraft — на главную" onClick={() => setMenuOpen(false)}>
-          <img src="./logo.svg" alt="логотип" />
+          <img src="/logo.svg" alt="логотип" />
         </Link>
 
         <button

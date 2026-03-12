@@ -38,17 +38,44 @@ export function Skin3DViewer({
       console.log(`[Skin3DViewer] Using data URL for ${title}`);
     } else if (skinUrl) {
       try {
-        finalUrl = resolveAssetUrl(skinUrl);
+        // Проверяем тип
+        if (typeof skinUrl !== 'string') {
+          console.log(`[Skin3DViewer] Invalid skin URL type for ${title}:`, typeof skinUrl);
+          setError('Неверный тип URL');
+          setIsLoading(false);
+          return;
+        }
+
+        // Только теперь безопасно вызываем trim()
+        const trimmedUrl = skinUrl.trim();
+        if (!trimmedUrl || trimmedUrl === 'null' || trimmedUrl === 'undefined') {
+          console.log(`[Skin3DViewer] Empty skin URL for ${title}`);
+          setError('Пустой URL');
+          setIsLoading(false);
+          return;
+        }
+
+        // Используем только resolveAssetUrl
+        finalUrl = resolveAssetUrl(trimmedUrl);
+        
         console.log(`[Skin3DViewer] Resolved URL for ${title}:`, finalUrl);
+        
+        if (!finalUrl) {
+          console.log(`[Skin3DViewer] Could not resolve URL for ${title}:`, trimmedUrl);
+          setError('Не удалось преобразовать URL');
+          setIsLoading(false);
+          return;
+        }
+
+        console.log(`[Skin3DViewer] Loading skin for ${title}:`, finalUrl);
+        
       } catch (err) {
-        console.error(`[Skin3DViewer] Error resolving URL:`, err);
-        setError('Ошибка загрузки');
+        console.error(`[Skin3DViewer] Error processing URL for ${title}:`, err);
+        setError('Ошибка обработки URL');
         setIsLoading(false);
         return;
       }
-    }
-
-    if (!finalUrl) {
+    } else {
       console.log(`[Skin3DViewer] No URL for ${title}`);
       setError('Нет изображения');
       setIsLoading(false);

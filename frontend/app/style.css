@@ -610,29 +610,209 @@
 .skins-cards-row {
   display: flex;
   flex-wrap: wrap;
-  gap: 20px;
+  gap: 15px;
   justify-content: center;
 }
 
-.skin-card-main {
-  width: 305px;
-  height: 440px;
-  flex-shrink: 0;
+/* ========== СТИЛИ ДЛЯ ГЛАВНОЙ СТРАНИЦЫ ========== */
+.home-page .skin-card-main {
+  width: 220px;
+  height: 320px;
+  display: block;
+  position: relative;
   overflow: hidden;
-  background-color: rgba(0,0,0,0.2);
+  background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+  border: 4px solid #FF0000;
+  border-radius: 4px;
+  transition: all 0.3s ease;
+  cursor: default;
+  text-decoration: none;
 }
 
-.skin-card-main img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
+.home-page .skin-card-main:hover {
+  transform: scale(1.02) rotate(1deg);
+  border-color: #00ff00;
+  box-shadow: 3px 3px 0 #ff00ff, 6px 6px 0 #00ffff;
+  z-index: 10;
 }
 
-.skin-card-main .builds-img-placeholder {
+.home-page .skin-card-main .skin-card-image-wrap {
   width: 100%;
   height: 100%;
-  min-height: 0;
+  position: relative;
 }
+
+.home-page .skin-card-main .skin-3d-viewer {
+  width: 100%;
+  height: 100%;
+}
+
+.home-page .skin-card-main .skin-3d-viewer canvas {
+  width: 100% !important;
+  height: 100% !important;
+  object-fit: contain;
+}
+
+/* Адаптивность для главной */
+@media (max-width: 1200px) {
+  .home-page .skin-card-main {
+    width: 200px;
+    height: 290px;
+  }
+}
+
+@media (max-width: 1024px) {
+  .home-page .skin-card-main {
+    width: 180px;
+    height: 260px;
+  }
+}
+
+@media (max-width: 900px) {
+  .home-page .skin-card-main {
+    width: 220px;
+    height: 320px;
+  }
+}
+
+@media (max-width: 768px) {
+  .home-page .skin-card-main {
+    width: 200px;
+    height: 290px;
+  }
+}
+
+@media (max-width: 600px) {
+  .home-page .skin-card-main {
+    width: 240px;
+    height: 350px;
+  }
+}
+
+@media (max-width: 480px) {
+  .home-page .skin-card-main {
+    width: 100%;
+    max-width: 240px;
+    height: auto;
+    aspect-ratio: 220/320;
+  }
+}
+/* ============================================ */
+
+/* ========== СТИЛИ ДЛЯ СТРАНИЦЫ СПИСКА СКИНОВ ========== */
+.skins-grid-page {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 20px;
+  justify-content: center;
+  margin: 30px 0;
+  width: 100%;
+}
+
+.skin-card-page {
+  width: 100%;
+  max-width: 280px;
+  height: auto;
+  min-height: 400px;
+  background: #fff;
+  border: 6px solid #FF0000;
+  border-radius: 4px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  box-sizing: border-box;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  margin: 0 auto;
+}
+
+.skin-card-page .skin-card-image-wrap {
+  flex: 1;
+  min-height: 200px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+  overflow: hidden;
+}
+
+.skin-card-page .skin-card-name {
+  font-size: 24px;
+  color: #000;
+  text-align: center;
+  padding: 8px;
+  margin: 0;
+  font-weight: 600;
+  line-height: 1.2;
+  background: #fff;
+}
+
+.skin-card-page .skin-card-category {
+  font-size: 0.9rem;
+  color: #333;
+  text-align: center;
+  padding: 0 8px 8px;
+  margin: 0;
+  background: #fff;
+}
+
+.skin-card-page .skin-card-footer {
+  padding: 10px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background: #fff;
+  border-top: 1px solid #eee;
+}
+
+.skin-card-download {
+  width: 200px;
+  height: 45px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: #FBFF00;
+  border: 4px solid #0800FF;
+  color: #0800FF;
+  font-size: 24px;
+  font-weight: 700;
+  text-decoration: none;
+  font-family: inherit;
+  border-radius: 4px;
+  box-sizing: border-box;
+  transition: opacity 0.2s ease;
+}
+
+.skin-card-download:hover {
+  opacity: 0.95;
+}
+
+/* Адаптивность для страницы скинов */
+@media (max-width: 1200px) {
+  .skins-grid-page {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+@media (max-width: 900px) {
+  .skins-grid-page {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  
+  .skin-card-page {
+    max-width: 260px;
+  }
+}
+
+@media (max-width: 600px) {
+  .skins-grid-page {
+    grid-template-columns: 1fr;
+  }
+  
+  .skin-card-page {
+    max-width: 280px;
+  }
+}
+/* ============================================ */
 
 .skins-buttons-row {
   display: flex;
@@ -765,14 +945,17 @@
   cursor: pointer;
   z-index: 3;
   padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .seeds-nav-btn.prev { left: 12px; }
 .seeds-nav-btn.next { right: 12px; }
 
 .seeds-nav-btn svg {
-  width: 100%;
-  height: 100%;
+  width: 60%;
+  height: 60%;
   object-fit: contain;
 }
 

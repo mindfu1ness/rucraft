@@ -2,6 +2,10 @@
 
 use App\Http\Controllers\Api\Admin\UserController as AdminUserController;
 use App\Http\Controllers\Api\Admin\AnalyticsController;
+use App\Http\Controllers\Admin\SkinModerationController;
+use App\Http\Controllers\Admin\BuildModerationController;
+use App\Http\Controllers\Admin\ModModerationController;
+use App\Http\Controllers\Admin\SeedModerationController;
 use App\Http\Controllers\Api\DeveloperController;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\ProfileController;
@@ -45,6 +49,32 @@ Route::get('/skins/{skin}', [SkinController::class, 'show']); // Для прос
 Route::get('/skins/{skin}/download', [SkinController::class, 'downloadTexture']);
 Route::get('/skins/{skin}/file', [SkinController::class, 'getSkinFile']); // Для прямого просмотра
 
+// Создание скина (для авторизованных пользователей)
+Route::middleware('auth:sanctum')->post('/skins', [SkinController::class, 'store']);
+
+// Маршруты для построек
+Route::get('/builds', [BuildController::class, 'index']);
+Route::get('/builds/{build}', [BuildController::class, 'show']);
+Route::get('/builds/{build}/download', [BuildController::class, 'downloadFile']);
+
+// Создание постройки (для авторизованных пользователей)
+Route::middleware('auth:sanctum')->post('/builds', [BuildController::class, 'store']);
+
+// Маршруты для модов
+Route::get('/mods', [ModeController::class, 'index']);
+Route::get('/mods/{mode}', [ModeController::class, 'show']);
+Route::get('/mods/{mode}/download', [ModeController::class, 'downloadFile']);
+
+// Создание мода (для авторизованных пользователей)
+Route::middleware('auth:sanctum')->post('/mods', [ModeController::class, 'store']);
+
+// Маршруты для сидов
+Route::get('/seeds', [SeedController::class, 'index']);
+Route::get('/seeds/{seed}', [SeedController::class, 'show']);
+
+// Создание сида (для авторизованных пользователей)
+Route::middleware('auth:sanctum')->post('/seeds', [SeedController::class, 'store']);
+
 // Аутентификация
 Route::post('/register', [AuthController::class, 'register']);
 Route::post('/login', [AuthController::class, 'login']);
@@ -62,6 +92,30 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('/users/{user}/ban', [AdminUserController::class, 'ban']);
         Route::post('/users/{user}/unban', [AdminUserController::class, 'unban']);
         Route::get('/analytics', [AnalyticsController::class, 'index']);
+
+        // Модерация скинов
+        Route::get('/skins/moderation', [SkinModerationController::class, 'index']);
+        Route::get('/skins/moderation/{moderationRequest}', [SkinModerationController::class, 'show']);
+        Route::post('/skins/moderation/{moderationRequest}/approve', [SkinModerationController::class, 'approve']);
+        Route::post('/skins/moderation/{moderationRequest}/reject', [SkinModerationController::class, 'reject']);
+
+        // Модерация построек
+        Route::get('/builds/moderation', [BuildModerationController::class, 'index']);
+        Route::get('/builds/moderation/{moderationRequest}', [BuildModerationController::class, 'show']);
+        Route::post('/builds/moderation/{moderationRequest}/approve', [BuildModerationController::class, 'approve']);
+        Route::post('/builds/moderation/{moderationRequest}/reject', [BuildModerationController::class, 'reject']);
+
+        // Модерация модов
+        Route::get('/mods/moderation', [ModModerationController::class, 'index']);
+        Route::get('/mods/moderation/{moderationRequest}', [ModModerationController::class, 'show']);
+        Route::post('/mods/moderation/{moderationRequest}/approve', [ModModerationController::class, 'approve']);
+        Route::post('/mods/moderation/{moderationRequest}/reject', [ModModerationController::class, 'reject']);
+
+        // Модерация сидов
+        Route::get('/seeds/moderation', [SeedModerationController::class, 'index']);
+        Route::get('/seeds/moderation/{moderationRequest}', [SeedModerationController::class, 'show']);
+        Route::post('/seeds/moderation/{moderationRequest}/approve', [SeedModerationController::class, 'approve']);
+        Route::post('/seeds/moderation/{moderationRequest}/reject', [SeedModerationController::class, 'reject']);
     });
 
     Route::post('/skins/submit', [SkinController::class, 'submit']);
