@@ -8,6 +8,36 @@ export const getBackendBaseUrl = () => {
   return String(apiBase).replace(/\/api\/?$/, "");
 };
 
+export const resolveStorageUrl = (path?: string | null): string | null => {
+  if (path === null || path === undefined) {
+    console.log("[resolveStorageUrl] Path is null or undefined");
+    return null;
+  }
+
+  if (typeof path !== "string") {
+    console.log("[resolveStorageUrl] Path is not a string:", typeof path);
+    return null;
+  }
+
+  const cleanPath = path.trim();
+  if (!cleanPath || cleanPath === "null" || cleanPath === "undefined") {
+    console.log("[resolveStorageUrl] Empty or invalid path");
+    return null;
+  }
+
+  // Если уже полный HTTP(S) или относительный корневой URL - отдаем как есть
+  if (/^(?:https?:)?\/\//.test(cleanPath)) {
+    return cleanPath;
+  }
+
+  const backendBase = getBackendBaseUrl().replace(/\/$/, "");
+
+  // Если путь уже начинается с /storage или storage, не дублируем префикс
+  const storagePath = cleanPath.replace(/^\/?storage\/?/, "");
+
+  return `${backendBase}/storage/${storagePath}`;
+};
+
 export const resolveAssetUrl = (path?: string | null): string | null => {
   if (path === null || path === undefined) {
     console.log('[resolveAssetUrl] Path is null or undefined');
@@ -455,6 +485,20 @@ export const modsApi = {
     return apiFetch<ModsIndexResponse>(`mods${query ? `?${query}` : ""}`);
   },
   show: (id: number) => apiFetch<ShowResponse<ModPost>>(`mods/${id}`),
+
+  create: (formData: FormData) => {
+    const base = getBaseUrl().replace(/\/$/, "");
+    const token = typeof window !== "undefined" ? localStorage.getItem("rucraft_token") : null;
+    return fetch(`${base}/mods`, {
+      method: "POST",
+      headers: { Accept: "application/json", ...(token ? { Authorization: `Bearer ${token}` } : {}) },
+      body: formData,
+    }).then(async (res) => {
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error((data as { message?: string }).message ?? String(res.status));
+      return data;
+    });
+  },
   
   getVersions: () => 
     apiFetch<{ data: string[] }>('mods/versions'),
