@@ -7,7 +7,8 @@ interface SkinCardProps {
 }
 
 export function SkinCard({ skin }: SkinCardProps) {
-  const imageSrc = resolveAssetUrl(skin.image) ?? "/placeholder-skin.png";
+  const imageSrc =
+    resolveAssetUrl(skin.file_url ?? skin.image ?? undefined) ?? "/placeholder-skin.png";
   
   return (
     <article className="card group">
