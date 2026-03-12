@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Api\Admin\UserController as AdminUserController;
+use App\Http\Controllers\Api\Admin\AnalyticsController;
 use App\Http\Controllers\Api\DeveloperController;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\ProfileController;
@@ -26,9 +27,13 @@ Route::get('/builds', [BuildController::class, 'index']);
 Route::get('/builds/{build}', [BuildController::class, 'show']);
 Route::get('/builds/{build}/download', [BuildController::class, 'downloadFile']);
 
-Route::get('/mods', [ModeController::class, 'index']);
-Route::get('/mods/{mode}', [ModeController::class, 'show']);
-Route::get('/mods/{mode}/download', [ModeController::class, 'downloadFile']);
+Route::prefix('mods')->group(function () {
+    Route::get('/', [ModeController::class, 'index']);
+    Route::get('/versions', [ModeController::class, 'versions']);
+    Route::get('/minecraft-versions', [ModeController::class, 'minecraftVersions']);
+    Route::get('/{mode}', [ModeController::class, 'show']);
+    Route::get('/{mode}/download', [ModeController::class, 'downloadFile'])->name('mods.download');
+});
 
 Route::get('/seeds', [SeedController::class, 'index']);
 Route::get('/seeds/{seed}', [SeedController::class, 'show']);
@@ -55,6 +60,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/users', [AdminUserController::class, 'index']);
         Route::post('/users/{user}/ban', [AdminUserController::class, 'ban']);
         Route::post('/users/{user}/unban', [AdminUserController::class, 'unban']);
+        Route::get('/analytics', [AnalyticsController::class, 'index']);
     });
 });
 
