@@ -3,20 +3,43 @@
 import Link from "next/link";
 
 const slides = [
-  { id: 1, gradient: "from-emerald-900 via-teal-800 to-cyan-900" },
-  { id: 2, gradient: "from-stone-800 via-zinc-800 to-slate-800" },
-  { id: 3, gradient: "from-green-900 via-emerald-800 to-teal-900" },
+  {
+    id: 1,
+    gradient: "from-emerald-900 via-teal-800 to-cyan-900",
+    image: "/developers/main_slider1.png",
+    alt: "Основной слайд 1",
+  },
+  {
+    id: 2,
+    gradient: "from-stone-800 via-zinc-800 to-slate-800",
+    image: "/developers/main_slider2.png",
+    alt: "Основной слайд 2",
+  },
+  {
+    id: 3,
+    gradient: "from-green-900 via-emerald-800 to-teal-900",
+    image: "/developers/main_slider3.png",
+    alt: "Основной слайд 3",
+  },
 ];
 
 export function HeroSlider() {
+  const loopSlides = [...slides, slides[0]];
+
   return (
     <section className="hero-slider">
       <div className="hero-slider-track">
-        {slides.map((slide) => (
+        {loopSlides.map((slide, index) => (
           <div
-            key={slide.id}
+            key={`${slide.id}-${index}`}
             className={`hero-slide hero-slide-${slide.id}`}
-          />
+          >
+            <img
+              src={slide.image}
+              alt={slide.alt}
+              className="hero-slide-image"
+            />
+          </div>
         ))}
       </div>
       <div className="hero-overlay">
@@ -29,10 +52,10 @@ export function HeroSlider() {
       </div>
       <div className="hero-nav-btns" aria-hidden="true">
         <button type="button" className="hero-nav-btn prev" aria-label="Предыдущий слайд">
-          {/* Вставьте SVG */}
+          <img src="/developers/strelka.svg" alt="Предыдущий слайд" className="hero-nav-icon" />
         </button>
         <button type="button" className="hero-nav-btn next" aria-label="Следующий слайд">
-          {/* Вставьте SVG */}
+          <img src="/developers/strelka.svg" alt="Следующий слайд" className="hero-nav-icon" />
         </button>
       </div>
     </section>

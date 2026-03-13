@@ -2,6 +2,7 @@ import Link from "next/link";
 import { BackendStatus } from "./components/BackendStatus";
 import { HeroSlider } from "./components/HeroSlider";
 import { Skin3DViewer } from "./skins/Skin3DViewer";
+import { SeedsSlider } from "./components/SeedsSlider";
 import {
   buildsApi,
   modsApi,
@@ -32,7 +33,7 @@ async function getHomeData(): Promise<{
     return {
       builds: buildsRes.data.slice(0, 3),
       mods: modsRes.data.slice(0, 2),
-      seeds: seedsRes.data.slice(0, 1),
+      seeds: seedsRes.data.slice(0, 4),
       skins: skinsRes.data.slice(0, 4),
     };
   } catch (err) {
@@ -43,7 +44,6 @@ async function getHomeData(): Promise<{
 
 export default async function Home() {
   const { builds, mods, seeds, skins } = await getHomeData();
-  const firstSeed = seeds[0];
 
   return (
     <>
@@ -134,64 +134,8 @@ export default async function Home() {
         </div>
       </section>
 
-      {/* Блок СИДЫ с нормальными стрелками */}
-      <section className="seeds-block">
-        <h2 className="section-title-cyan">СИДЫ</h2>
-        <div className="seeds-slider-wrap">
-          <div className="seeds-slider-track">
-            {firstSeed ? (
-              <div className="seeds-slide">
-                <Link
-                  href={`/seeds/${firstSeed.id}`}
-                  className="builds-img-placeholder seeds-slide-bg"
-                >
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img
-                    src={
-                      firstSeed.image_url ??
-                      resolveStorageUrl(firstSeed.image) ??
-                      "/placeholder-seed.png"
-                    }
-                    alt={firstSeed.title}
-                  />
-                </Link>
-                <div className="seeds-slide-info">
-                  <div className="seeds-slide-number">{firstSeed.seed}</div>
-                  <div className="seeds-slide-name">{firstSeed.title}</div>
-                </div>
-                <div className="seeds-more-wrap">
-                  <Link href={`/seeds`} className="builds-more-btn">
-                    БОЛЬШЕ &gt;&gt;&gt;
-                  </Link>
-                </div>
-              </div>
-            ) : (
-              <p className="form-error">Сиды пока не загружены.</p>
-            )}
-          </div>
-          
-          {/* Нормальные стрелки для слайдера сидов */}
-          <button 
-            type="button" 
-            className="seeds-nav-btn prev" 
-            aria-label="Предыдущий"
-          >
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <path d="M15 18L9 12L15 6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-            </svg>
-          </button>
-          
-          <button 
-            type="button" 
-            className="seeds-nav-btn next" 
-            aria-label="Следующий"
-          >
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <path d="M9 18L15 12L9 6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-            </svg>
-          </button>
-        </div>
-      </section>
+      {/* Блок СИДЫ со стрелками strelka.png и пролистыванием первых 4 сидов */}
+      <SeedsSlider seeds={seeds} />
 
       {/* Блок моДЫ */}
       <section className="mods-block-home">
