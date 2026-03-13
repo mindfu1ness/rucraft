@@ -1,5 +1,6 @@
 // lib/api.ts
 
+// Сначала базовые функции
 export const getBaseUrl = () =>
   process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000/api";
 
@@ -7,6 +8,64 @@ export const getBackendBaseUrl = () => {
   const apiBase = getBaseUrl();
   return String(apiBase).replace(/\/api\/?$/, "");
 };
+
+// Функции для работы с токеном (объявляем до их использования)
+function getToken(): string | null {
+  if (typeof window === "undefined") return null;
+  return localStorage.getItem("rucraft_token");
+}
+
+export function setAuthToken(token: string): void {
+  if (typeof window !== "undefined") localStorage.setItem("rucraft_token", token);
+}
+
+export function clearAuthToken(): void {
+  if (typeof window !== "undefined") localStorage.removeItem("rucraft_token");
+}
+
+// Функция для получения CSRF cookie
+export async function getCsrfCookie(): Promise<boolean> {
+  const baseUrl = getBackendBaseUrl();
+  const url = `${baseUrl}/sanctum/csrf-cookie`;
+  
+  console.log('[CSRF] Getting cookie from:', url);
+  
+  try {
+    const response = await fetch(url, {
+      method: 'GET',
+      credentials: 'include',
+      mode: 'cors',
+      headers: {
+        'Accept': 'application/json',
+        'X-Requested-With': 'XMLHttpRequest'
+      }
+    });
+    
+    console.log('[CSRF] Response status:', response.status);
+    
+    if (!response.ok) {
+      console.error('[CSRF] Failed:', await response.text());
+      return false;
+    }
+    
+    // Проверяем, установились ли cookies
+    const cookies = document.cookie;
+    console.log('[CSRF] Document cookies after request:', cookies);
+    
+    // Ждем установки cookie
+    await new Promise(resolve => setTimeout(resolve, 500));
+    
+    // Проверяем наличие XSRF-TOKEN
+    const hasXsrfToken = cookies.includes('XSRF-TOKEN=');
+    console.log('[CSRF] Has XSRF-TOKEN:', hasXsrfToken);
+    
+    return true;
+    
+  } catch (error) {
+    console.error('[CSRF] Error:', error);
+    return false;
+  }
+}
 
 // Твоя функция resolveAssetUrl
 export const resolveAssetUrl = (path?: string | null, type: string = 'skins'): string | null => {
@@ -91,63 +150,6 @@ export const getAbsoluteAssetUrl = (path?: string | null, type: string = 'skins'
 
 export type ApiError = { message: string; errors?: Record<string, string[]> };
 
-function getToken(): string | null {
-  if (typeof window === "undefined") return null;
-  return localStorage.getItem("rucraft_token");
-}
-
-export function setAuthToken(token: string): void {
-  if (typeof window !== "undefined") localStorage.setItem("rucraft_token", token);
-}
-
-export function clearAuthToken(): void {
-  if (typeof window !== "undefined") localStorage.removeItem("rucraft_token");
-}
-
-// Функция для получения CSRF cookie
-export async function getCsrfCookie(): Promise<boolean> {
-  const baseUrl = getBackendBaseUrl();
-  const url = `${baseUrl}/sanctum/csrf-cookie`;
-  
-  console.log('[CSRF] Getting cookie from:', url);
-  
-  try {
-    const response = await fetch(url, {
-      method: 'GET',
-      credentials: 'include',
-      mode: 'cors',
-      headers: {
-        'Accept': 'application/json',
-        'X-Requested-With': 'XMLHttpRequest'
-      }
-    });
-    
-    console.log('[CSRF] Response status:', response.status);
-    
-    if (!response.ok) {
-      console.error('[CSRF] Failed:', await response.text());
-      return false;
-    }
-    
-    // Проверяем, установились ли cookies
-    const cookies = document.cookie;
-    console.log('[CSRF] Document cookies after request:', cookies);
-    
-    // Ждем установки cookie
-    await new Promise(resolve => setTimeout(resolve, 500));
-    
-    // Проверяем наличие XSRF-TOKEN
-    const hasXsrfToken = cookies.includes('XSRF-TOKEN=');
-    console.log('[CSRF] Has XSRF-TOKEN:', hasXsrfToken);
-    
-    return true;
-    
-  } catch (error) {
-    console.error('[CSRF] Error:', error);
-    return false;
-  }
-}
-
 // Функция apiFetch с поддержкой FormData
 export async function apiFetch<T = unknown>(
   path: string,
@@ -210,6 +212,22 @@ export async function apiFetch<T = unknown>(
   try {
     const res = await fetch(url, fetchOptions);
     console.log(`[API] Response status: ${res.status} for ${path}`);
+    
+    // Обработка 401 Unauthorized
+    if (res.status === 401) {
+      console.error('[API] Unauthorized - clearing token');
+      
+      // Очищаем недействительный токен
+      clearAuthToken();
+      
+      // Можно также вызвать событие для перенаправления на логин
+      if (typeof window !== 'undefined') {
+        // Создаем кастомное событие для перенаправления
+        window.dispatchEvent(new CustomEvent('unauthorized'));
+      }
+      
+      throw new Error('Unauthenticated');
+    }
     
     if (!res.ok) {
       // Пробуем получить тело ошибки
@@ -446,9 +464,17 @@ export type SeedPost = {
   seed: string;
   version: "java" | "bedrock" | "both";
   release: string;
-  x: number;
-  y: number;
-  z: number;
+  // Добавляем поле coordinates как массив
+  coordinates?: Array<{
+    name: string;
+    x: number;
+    y: number;
+    z: number;
+  }> | null;
+  // Для обратной совместимости оставляем x,y,z
+  x?: number;
+  y?: number;
+  z?: number;
   author: ContentAuthor;
   created_at: string;
 };
