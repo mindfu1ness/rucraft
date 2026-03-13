@@ -4,7 +4,6 @@ import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import { PageSection } from "../../components/PageSection";
 import { seedsApi, type SeedPost, resolveStorageUrl } from "@/lib/api";
-import styles from './seed.module.css';
 
 type Coordinates = {
   name: string;
@@ -34,20 +33,17 @@ export default function SeedShowPage() {
     seedsApi
       .show(id)
       .then((response) => {
-        console.log('API Response:', response.data); // Для отладки
+        console.log('API Response:', response.data);
         setSeed(response.data);
         
-        // Парсим координаты из JSON-строки
         if (response.data.coordinates) {
           try {
-            // Проверяем тип и парсим соответственно
             if (typeof response.data.coordinates === 'string') {
               const parsed = JSON.parse(response.data.coordinates);
               setCoordinates(Array.isArray(parsed) ? parsed : []);
             } else if (Array.isArray(response.data.coordinates)) {
               setCoordinates(response.data.coordinates);
             } else if (response.data.coordinates && typeof response.data.coordinates === 'object') {
-              // Если это одиночный объект координат
               setCoordinates([response.data.coordinates as Coordinates]);
             }
           } catch (e) {
@@ -66,20 +62,20 @@ export default function SeedShowPage() {
   }, [id]);
 
   return (
-    <div className={styles.pageContent}>
+    <div className="page-content">
       <PageSection title={seed ? seed.title : "Сид"}>
-        {loading && <p className={styles.loading}>Загрузка…</p>}
-        {error && <p className={styles.formError}>{error}</p>}
+        {loading && <p>Загрузка…</p>}
+        {error && <p className="form-error">{error}</p>}
         {!loading && !error && seed && (
-          <div className={styles.spaceY4}>
-            <div className={styles.spaceY2}>
-              <p className={styles.infoText}>
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <p>
                 Автор: <strong>{seed.author.name}</strong>
               </p>
-              <p className={styles.infoText}>
+              <p>
                 Номер сида: <code>{seed.seed}</code>
               </p>
-              <p className={styles.infoText}>
+              <p>
                 Версия: <strong>{seed.version}</strong>, релиз: <strong>{seed.release}</strong>
               </p>
               
@@ -105,22 +101,12 @@ export default function SeedShowPage() {
 
             {seed.images && seed.images.length > 0 && (
               <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 mt-6">
-              <p className={styles.infoText}>
-                Координаты: x = {seed.x}, y = {seed.y}, z = {seed.z}
-              </p>
-            </div>
-
-            {seed.images && seed.images.length > 0 && (
-              <div className={styles.grid}>
                 {seed.images.map((src) => {
                   const resolved = resolveStorageUrl(src) ?? src;
                   return (
-                    <div key={src} className={styles.imageContainer}>
-                      <img 
-                        src={resolved} 
-                        alt={seed.title} 
-                        className={styles.image}
-                      />
+                    <div key={src} className="overflow-hidden rounded-xl bg-zinc-200 dark:bg-zinc-700">
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img src={resolved} alt={seed.title} className="h-full w-full object-cover" />
                     </div>
                   );
                 })}
